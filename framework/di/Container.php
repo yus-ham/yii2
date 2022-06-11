@@ -9,6 +9,8 @@ namespace yii\di;
 
 use ReflectionClass;
 use ReflectionException;
+use ReflectionNamedType;
+use ReflectionParameter;
 use Yii;
 use yii\base\Component;
 use yii\base\InvalidConfigException;
@@ -24,8 +26,8 @@ use yii\helpers\ArrayHelper;
  * Container supports constructor injection as well as property injection.
  *
  * To use Container, you first need to set up the class dependencies by calling [[set()]].
- * You then call [[get()]] to create a new class object. Container will automatically instantiate
- * dependent objects, inject them into the object being created, configure and finally return the newly created object.
+ * You then call [[get()]] to create a new class object. The Container will automatically instantiate
+ * dependent objects, inject them into the object being created, configure, and finally return the newly created object.
  *
  * By default, [[\Yii::$container]] refers to a Container instance which is used by [[\Yii::createObject()]]
  * to create new object instances. You may use this method to replace the `new` operator
@@ -93,9 +95,8 @@ use yii\helpers\ArrayHelper;
  * For more details and usage information on Container, see the [guide article on di-containers](guide:concept-di-container).
  *
  * @property-read array $definitions The list of the object definitions or the loaded shared objects (type or
- * ID => definition or instance). This property is read-only.
- * @property-write bool $resolveArrays Whether to attempt to resolve elements in array dependencies. This
- * property is write-only.
+ * ID => definition or instance).
+ * @property-write bool $resolveArrays Whether to attempt to resolve elements in array dependencies.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
@@ -144,7 +145,7 @@ class Container extends Component
      * In this case, the constructor parameters and object configurations will be used
      * only if the class is instantiated the first time.
      *
-     * @param string|Instance $class the class Instance, name or an alias name (e.g. `foo`) that was previously
+     * @param string|Instance $class the class Instance, name, or an alias name (e.g. `foo`) that was previously
      * registered via [[set()]] or [[setSingleton()]].
      * @param array $params a list of constructor parameter values. Use one of two definitions:
      *  - Parameters as name-value pairs, for example: `['posts' => PostRepository::class]`.
@@ -294,7 +295,7 @@ class Container extends Component
     /**
      * Returns a value indicating whether the container has the definition of the specified name.
      * @param string $class class name, interface name or alias name
-     * @return bool whether the container has the definition of the specified name..
+     * @return bool Whether the container has the definition of the specified name.
      * @see set()
      */
     public function has($class)
@@ -493,7 +494,7 @@ class Container extends Component
      * Returns the dependencies of the specified class.
      * @param string $class class name, interface name or alias name
      * @return array the dependencies of the specified class.
-     * @throws InvalidConfigException if a dependency cannot be resolved or if a dependency cannot be fulfilled.
+     * @throws NotInstantiableException if a dependency cannot be resolved or if a dependency cannot be fulfilled.
      */
     protected function getDependencies($class)
     {
@@ -505,7 +506,12 @@ class Container extends Component
         try {
             $reflection = new ReflectionClass($class);
         } catch (\ReflectionException $e) {
-            throw new InvalidConfigException('Failed to instantiate component or class "' . $class . '".', 0, $e);
+            throw new NotInstantiableException(
+                $class,
+                'Failed to instantiate component or class "' . $class . '".',
+                0,
+                $e
+            );
         }
 
         $constructor = $reflection->getConstructor();
@@ -517,21 +523,36 @@ class Container extends Component
 
                 if (PHP_VERSION_ID >= 80000) {
                     $c = $param->getType();
-                    $isClass = $c !== null && !$param->getType()->isBuiltin();
+                    $isClass = false;
+                    if ($c instanceof ReflectionNamedType) {
+                        $isClass = !$c->isBuiltin();
+                    }
                 } else {
                     try {
                         $c = $param->getClass();
                     } catch (ReflectionException $e) {
-                        $c = null;
+                        if (!$this->isNulledParam($param)) {
+                            $notInstantiableClass = null;
+                            if (PHP_VERSION_ID >= 70000) {
+                                $type = $param->getType();
+                                if ($type instanceof ReflectionNamedType) {
+                                    $notInstantiableClass = $type->getName();
+                                }
+                            }
+                            throw new NotInstantiableException(
+                                $notInstantiableClass,
+                                $notInstantiableClass === null ? 'Can not instantiate unknown class.' : null
+                            );
+                        } else {
+                            $c = null;
+                        }
                     }
                     $isClass = $c !== null;
                 }
                 $className = $isClass ? $c->getName() : null;
 
-                if ($className !== null &&
-                    ($this->has($className) || class_exists($className))
-                ) {
-                    $dependencies[$param->getName()] = Instance::of($className);
+                if ($className !== null) {
+                    $dependencies[$param->getName()] = Instance::of($className, $this->isNulledParam($param));
                 } else {
                     $dependencies[$param->getName()] = $param->isDefaultValueAvailable()
                         ? $param->getDefaultValue()
@@ -547,9 +568,18 @@ class Container extends Component
     }
 
     /**
+     * @param ReflectionParameter $param
+     * @return bool
+     */
+    private function isNulledParam($param)
+    {
+        return $param->isOptional() || (PHP_VERSION_ID >= 70100 && $param->getType()->allowsNull());
+    }
+
+    /**
      * Resolves dependencies by replacing them with the actual object instances.
      * @param array $dependencies the dependencies
-     * @param ReflectionClass $reflection the class reflection associated with the dependencies
+     * @param ReflectionClass|null $reflection the class reflection associated with the dependencies
      * @return array the resolved dependencies
      * @throws InvalidConfigException if a dependency cannot be resolved or if a dependency cannot be fulfilled.
      */
@@ -558,7 +588,7 @@ class Container extends Component
         foreach ($dependencies as $index => $dependency) {
             if ($dependency instanceof Instance) {
                 if ($dependency->id !== null) {
-                    $dependencies[$index] = $this->get($dependency->id);
+                    $dependencies[$index] = $dependency->get($this);
                 } elseif ($reflection !== null) {
                     $name = $reflection->getConstructor()->getParameters()[$index]->getName();
                     $class = $reflection->getName();
@@ -575,8 +605,8 @@ class Container extends Component
     /**
      * Invoke a callback with resolving dependencies in parameters.
      *
-     * This methods allows invoking a callback and let type hinted parameter names to be
-     * resolved as objects of the Container. It additionally allow calling function using named parameters.
+     * This method allows invoking a callback and let type hinted parameter names to be
+     * resolved as objects of the Container. It additionally allows calling function using named parameters.
      *
      * For example, the following callback may be invoked using the Container to resolve the formatter dependency:
      *
@@ -635,7 +665,19 @@ class Container extends Component
 
             if (PHP_VERSION_ID >= 80000) {
                 $class = $param->getType();
-                $isClass = $class !== null && !$param->getType()->isBuiltin();
+                if ($class instanceof \ReflectionUnionType || (PHP_VERSION_ID >= 80100 && $class instanceof \ReflectionIntersectionType)) {
+                    $isClass = false;
+                    foreach ($class->getTypes() as $type) {
+                        if (!$type->isBuiltin()) {
+                            $class = $type;
+                            $isClass = true;
+                            break;
+                        }
+                    }
+                } else {
+                    $isClass = $class !== null && !$class->isBuiltin();
+                }
+
             } else {
                 $class = $param->getClass();
                 $isClass = $class !== null;

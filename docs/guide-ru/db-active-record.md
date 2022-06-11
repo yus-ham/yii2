@@ -1,7 +1,7 @@
 Active Record
 =============
 
-[Active Record](http://ru.wikipedia.org/wiki/ActiveRecord) обеспечивает объектно-ориентированный интерфейс для доступа
+[Active Record](https://ru.wikipedia.org/wiki/ActiveRecord) обеспечивает объектно-ориентированный интерфейс для доступа
 и манипулирования данными, хранящимися в базах данных. Класс Active Record соответствует таблице в базе данных, объект
 Active Record соответствует строке этой таблицы, а *атрибут* объекта Active Record представляет собой значение
 отдельного столбца строки. Вместо непосредственного написания SQL-выражений вы сможете получать доступ к атрибутам
@@ -689,7 +689,7 @@ try {
 ```
 
 > Note: в коде выше ради совместимости с PHP 5.x и PHP 7.x использованы два блока catch. 
-> `\Exception` реализует интерфейс [`\Throwable` interface](https://secure.php.net/manual/ru/class.throwable.php)
+> `\Exception` реализует интерфейс [`\Throwable` interface](https://www.php.net/manual/ru/class.throwable.php)
 > начиная с PHP 7.0. Если вы используете только PHP 7 и новее, можете пропустить блок с `\Exception`.
 
 Второй способ заключается в том, чтобы перечислить операции с базой данных, которые требуют тразнакционного выполнения,
@@ -809,7 +809,7 @@ class Customer extends ActiveRecord
 {
     public function getOrders()
     {
-        return $this->hasMany(Order::className(), ['customer_id' => 'id']);
+        return $this->hasMany(Order::class, ['customer_id' => 'id']);
     }
 }
 
@@ -817,7 +817,7 @@ class Order extends ActiveRecord
 {
     public function getCustomer()
     {
-        return $this->hasOne(Customer::className(), ['id' => 'customer_id']);
+        return $this->hasOne(Customer::class, ['id' => 'customer_id']);
     }
 }
 ```
@@ -834,7 +834,7 @@ class Order extends ActiveRecord
   что покупатель может иметь много заказов в то время, как заказ может быть сделан лишь одним покупателем.
 - название связного Active Record класса: указывается в качестве первого параметра для метода 
   [[yii\db\ActiveRecord::hasMany()|hasMany()]] или для метода [[yii\db\ActiveRecord::hasOne()|hasOne()]]. Рекомендуется
-  использовать код `Xyz::className()`, чтобы получить строку с именем класса, при этом вы сможете воспользоваться
+  использовать код `Xyz::class`, чтобы получить строку с именем класса, при этом вы сможете воспользоваться
   возможностями авто-дополнения кода, встроенного в IDE, а также получите обработку ошибок на этапе компиляции.
 - связь между двумя типами данных: указываются столбцы с помощью которых два типа данных связаны. Значения массива - это
   столбцы  основного объекта данных (представлен классом Active Record, в котором объявляется связь), в то время как
@@ -844,6 +844,7 @@ class Order extends ActiveRecord
   указывается сразу после указания самого класса Active Record. Вы видите, что `customer_id` - это свойство класса
   `Order`, а `id` - свойство класса `Customer`.
   
+> Warning: Имя связи `relation` зарезервировано. Его использование приведёт к ошибке `ArgumentCountError`.
 
 ### Доступ к связным данным <span id="accessing-relational-data"></span>
 
@@ -874,14 +875,14 @@ SQL-выражения. Для принудительного повторног
 операции: `unset($customer->orders)`.
 
 > Note: Несмотря на то, что эта концепция выглядит похожей на концепцию [свойств объектов](concept-properties.md),
-  между ними есть важное различие. Для обычных свойств объектов значения свойств имеют тот же тип, который возвращает
-  геттер. Однако метод получения связных данных возвращает объект [[yii\db\ActiveQuery]], в то время как доступ к
-  свойству связи возвращает объект [[yii\db\ActiveRecord]] или массив таких объектов.
-  ```php
-  $customer->orders; // массив объектов `Order`
-  $customer->getOrders(); // объект ActiveQuery
-  ```
-  Это полезно при тонкой настройке запросов к связным данным, что будет описано в следующем разделе.
+> между ними есть важное различие. Для обычных свойств объектов значения свойств имеют тот же тип, который возвращает
+> геттер. Однако метод получения связных данных возвращает объект [[yii\db\ActiveQuery]], в то время как доступ к
+> свойству связи возвращает объект [[yii\db\ActiveRecord]] или массив таких объектов.
+> ```php
+> $customer->orders; // массив объектов `Order`
+> $customer->getOrders(); // объект ActiveQuery
+> ```
+> Это полезно при тонкой настройке запросов к связным данным, что будет описано в следующем разделе.
 
 
 ### Динамические запросы связных данных <span id="dynamic-relational-query"></span>
@@ -910,7 +911,7 @@ class Customer extends ActiveRecord
 {
     public function getBigOrders($threshold = 100)
     {
-        return $this->hasMany(Order::className(), ['customer_id' => 'id'])
+        return $this->hasMany(Order::class, ['customer_id' => 'id'])
             ->where('subtotal > :threshold', [':threshold' => $threshold])
             ->orderBy('id');
     }
@@ -931,7 +932,7 @@ $orders = $customer->bigOrders;
 ### Связывание посредством промежуточной таблицы <span id="junction-table"></span>
 
 При проектировании баз данных, когда между двумя таблицами имеется кратность связи many-to-many, обычно вводится 
-[промежуточная таблица](http://en.wikipedia.org/wiki/Junction_table). Например, таблицы `order` и `item` могут быть
+[промежуточная таблица](https://en.wikipedia.org/wiki/Junction_table). Например, таблицы `order` и `item` могут быть
 связаны посредством промежуточной таблицы с названием `order_item`. Один заказ будет соотноситься с несколькими товарами,
 в то время как один товар будет также соотноситься с несколькими заказами.
 
@@ -946,7 +947,7 @@ class Order extends ActiveRecord
 {
     public function getItems()
     {
-        return $this->hasMany(Item::className(), ['id' => 'item_id'])
+        return $this->hasMany(Item::class, ['id' => 'item_id'])
             ->viaTable('order_item', ['order_id' => 'id']);
     }
 }
@@ -959,12 +960,12 @@ class Order extends ActiveRecord
 {
     public function getOrderItems()
     {
-        return $this->hasMany(OrderItem::className(), ['order_id' => 'id']);
+        return $this->hasMany(OrderItem::class, ['order_id' => 'id']);
     }
 
     public function getItems()
     {
-        return $this->hasMany(Item::className(), ['id' => 'item_id'])
+        return $this->hasMany(Item::class, ['id' => 'item_id'])
             ->via('orderItems');
     }
 }
@@ -1235,7 +1236,7 @@ class Customer extends ActiveRecord
 {
     public function getOrders()
     {
-        return $this->hasMany(Order::className(), ['customer_id' => 'id']);
+        return $this->hasMany(Order::class, ['customer_id' => 'id']);
     }
 }
 
@@ -1243,7 +1244,7 @@ class Order extends ActiveRecord
 {
     public function getCustomer()
     {
-        return $this->hasOne(Customer::className(), ['id' => 'customer_id']);
+        return $this->hasOne(Customer::class, ['id' => 'customer_id']);
     }
 }
 ```
@@ -1277,7 +1278,7 @@ class Customer extends ActiveRecord
 {
     public function getOrders()
     {
-        return $this->hasMany(Order::className(), ['customer_id' => 'id'])->inverseOf('customer');
+        return $this->hasMany(Order::class, ['customer_id' => 'id'])->inverseOf('customer');
     }
 }
 ```
@@ -1390,7 +1391,7 @@ class Customer extends \yii\db\ActiveRecord
     public function getComments()
     {
         // у покупателя может быть много комментариев
-        return $this->hasMany(Comment::className(), ['customer_id' => 'id']);
+        return $this->hasMany(Comment::class, ['customer_id' => 'id']);
     }
 }
 
@@ -1405,7 +1406,7 @@ class Comment extends \yii\mongodb\ActiveRecord
     public function getCustomer()
     {
         // комментарий принадлежит одному покупателю
-        return $this->hasOne(Customer::className(), ['id' => 'customer_id']);
+        return $this->hasOne(Customer::class, ['id' => 'customer_id']);
     }
 }
 
@@ -1485,7 +1486,7 @@ class Customer extends \yii\db\ActiveRecord
 {
     public function getActiveComments()
     {
-        return $this->hasMany(Comment::className(), ['customer_id' => 'id'])->active();
+        return $this->hasMany(Comment::class, ['customer_id' => 'id'])->active();
     }
 }
 
@@ -1556,7 +1557,7 @@ class Customer extends \yii\db\ActiveRecord
 
     public function getOrders()
     {
-        return $this->hasMany(Order::className(), ['customer_id' => 'id']);
+        return $this->hasMany(Order::class, ['customer_id' => 'id']);
     }
 }
 ```
@@ -1652,7 +1653,7 @@ class Customer extends \yii\db\ActiveRecord
 
     public function getOrders()
     {
-        return $this->hasMany(Order::className(), ['customer_id' => 'id']);
+        return $this->hasMany(Order::class, ['customer_id' => 'id']);
     }
 }
 ```
@@ -1683,7 +1684,7 @@ class Customer extends \yii\db\ActiveRecord
      */
     public function getOrders()
     {
-        return $this->hasMany(Order::className(), ['customer_id' => 'id']);
+        return $this->hasMany(Order::class, ['customer_id' => 'id']);
     }
 
     /**

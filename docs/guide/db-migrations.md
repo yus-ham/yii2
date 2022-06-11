@@ -187,6 +187,22 @@ class m150101_185401_create_news_table extends Migration
 
 A list of all available methods for defining the column types is available in the API documentation of [[yii\db\SchemaBuilderTrait]].
 
+> Info: The generated file permissions and ownership will be determined by the current environment. This might lead to
+  inaccessible files. This could, for example, happen when the migration is created within a docker container
+  and the files are edited on the host. In this case the `newFileMode` and/or `newFileOwnership` of the MigrateController
+  can be changed. E.g. in the application config:
+  ```php
+  <?php
+  return [
+      'controllerMap' => [
+          'migrate' => [
+              'class' => 'yii\console\controllers\MigrateController',
+              'newFileOwnership' => '1000:1000', # Default WSL user id
+              'newFileMode' => 0660,
+          ],
+      ],
+  ];
+  ```
 
 ## Generating Migrations <span id="generating-migrations"></span>
 
@@ -669,7 +685,7 @@ in `safeDown()`. In the above example we first create the table and then insert 
 in `safeDown()` we first delete the row and then drop the table.
 
 > Note: Not all DBMS support transactions. And some DB queries cannot be put into a transaction. For some examples,
-  please refer to [implicit commit](http://dev.mysql.com/doc/refman/5.7/en/implicit-commit.html). If this is the case,
+  please refer to [implicit commit](https://dev.mysql.com/doc/refman/5.7/en/implicit-commit.html). If this is the case,
   you should still implement `up()` and `down()`, instead.
 
 

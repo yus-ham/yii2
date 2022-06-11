@@ -984,11 +984,11 @@ abstract class QueryBuilderTest extends DatabaseTestCase
                 $this->primaryKey()->first(),
                 [
                     'mysql' => 'int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST',
-                    'oci' => 'NUMBER(10) NOT NULL PRIMARY KEY',
                     'sqlsrv' => 'int IDENTITY PRIMARY KEY',
                     'cubrid' => 'int NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST',
                 ],
                 [
+                    'oci' => 'NUMBER(10) NOT NULL PRIMARY KEY',
                     'sqlsrv' => 'pk',
                 ]
             ],
@@ -997,11 +997,11 @@ abstract class QueryBuilderTest extends DatabaseTestCase
                 $this->integer()->first(),
                 [
                     'mysql' => 'int(11) FIRST',
-                    'oci' => 'NUMBER(10)',
                     'sqlsrv' => 'int',
                     'cubrid' => 'int FIRST',
                 ],
                 [
+                    'oci' => 'NUMBER(10)',
                     'pgsql' => 'integer',
                     'sqlsrv' => 'integer',
                 ]
@@ -1011,11 +1011,11 @@ abstract class QueryBuilderTest extends DatabaseTestCase
                 $this->string()->first(),
                 [
                     'mysql' => 'varchar(255) FIRST',
-                    'oci' => 'VARCHAR2(255)',
                     'sqlsrv' => 'nvarchar(255)',
                     'cubrid' => 'varchar(255) FIRST',
                 ],
                 [
+                    'oci' => 'VARCHAR2(255)',
                     'sqlsrv' => 'string',
                 ]
             ],
@@ -1024,11 +1024,11 @@ abstract class QueryBuilderTest extends DatabaseTestCase
                 $this->integer()->append('NOT NULL')->first(),
                 [
                     'mysql' => 'int(11) NOT NULL FIRST',
-                    'oci' => 'NUMBER(10) NOT NULL',
                     'sqlsrv' => 'int NOT NULL',
                     'cubrid' => 'int NOT NULL FIRST',
                 ],
                 [
+                    'oci' => 'NUMBER(10) NOT NULL',
                     'sqlsrv' => 'integer NOT NULL',
                 ]
             ],
@@ -1037,11 +1037,11 @@ abstract class QueryBuilderTest extends DatabaseTestCase
                 $this->string()->append('NOT NULL')->first(),
                 [
                     'mysql' => 'varchar(255) NOT NULL FIRST',
-                    'oci' => 'VARCHAR2(255) NOT NULL',
                     'sqlsrv' => 'nvarchar(255) NOT NULL',
                     'cubrid' => 'varchar(255) NOT NULL FIRST',
                 ],
                 [
+                    'oci' => 'VARCHAR2(255) NOT NULL',
                     'sqlsrv' => 'string NOT NULL',
                 ]
             ],
@@ -1184,6 +1184,7 @@ abstract class QueryBuilderTest extends DatabaseTestCase
             //in using array object containing only null value
             [['in', 'id', new TraversableObject([null])], '[[id]] IS NULL', []],
             [['not in', 'id', new TraversableObject([null])], '[[id]] IS NOT NULL', []],
+            [['not in', new Expression('id'), new TraversableObject([null])], '[[id]] IS NOT NULL', []],
 
             'composite in using array objects' => [
                 ['in', new TraversableObject(['id', 'name']), new TraversableObject([
@@ -1196,6 +1197,7 @@ abstract class QueryBuilderTest extends DatabaseTestCase
 
             // in object conditions
             [new InCondition('id', 'in', 1), '[[id]]=:qp0', [':qp0' => 1]],
+            [new InCondition(new Expression('id'), 'in', 1), '[[id]]=:qp0', [':qp0' => 1]],
             [new InCondition('id', 'in', [1]), '[[id]]=:qp0', [':qp0' => 1]],
             [new InCondition('id', 'not in', 1), '[[id]]<>:qp0', [':qp0' => 1]],
             [new InCondition('id', 'not in', [1]), '[[id]]<>:qp0', [':qp0' => 1]],
@@ -1237,6 +1239,7 @@ abstract class QueryBuilderTest extends DatabaseTestCase
             case 'sqlite':
                 $conditions = array_merge($conditions, [
                     [['in', ['id', 'name'], [['id' => 1, 'name' => 'foo'], ['id' => 2, 'name' => 'bar']]], '(([[id]] = :qp0 AND [[name]] = :qp1) OR ([[id]] = :qp2 AND [[name]] = :qp3))', [':qp0' => 1, ':qp1' => 'foo', ':qp2' => 2, ':qp3' => 'bar']],
+                    [['in', [new Expression('id'), 'name'], [['id' => 1, 'name' => 'foo'], ['id' => 2, 'name' => 'bar']]], '(([[id]] = :qp0 AND [[name]] = :qp1) OR ([[id]] = :qp2 AND [[name]] = :qp3))', [':qp0' => 1, ':qp1' => 'foo', ':qp2' => 2, ':qp3' => 'bar']],
                     [['not in', ['id', 'name'], [['id' => 1, 'name' => 'foo'], ['id' => 2, 'name' => 'bar']]], '(([[id]] != :qp0 OR [[name]] != :qp1) AND ([[id]] != :qp2 OR [[name]] != :qp3))', [':qp0' => 1, ':qp1' => 'foo', ':qp2' => 2, ':qp3' => 'bar']],
                     //[ ['in', ['id', 'name'], (new Query())->select(['id', 'name'])->from('users')->where(['active' => 1])], 'EXISTS (SELECT 1 FROM (SELECT [[id]], [[name]] FROM [[users]] WHERE [[active]]=:qp0) AS a WHERE a.[[id]] = [[id AND a.]]name[[ = ]]name`)', [':qp0' => 1] ],
                     //[ ['not in', ['id', 'name'], (new Query())->select(['id', 'name'])->from('users')->where(['active' => 1])], 'NOT EXISTS (SELECT 1 FROM (SELECT [[id]], [[name]] FROM [[users]] WHERE [[active]]=:qp0) AS a WHERE a.[[id]] = [[id]] AND a.[[name = ]]name`)', [':qp0' => 1] ],
@@ -1246,6 +1249,7 @@ abstract class QueryBuilderTest extends DatabaseTestCase
                 $conditions = array_merge($conditions, [
                     [['in', ['id', 'name'], [['id' => 1, 'name' => 'foo'], ['id' => 2, 'name' => 'bar']]], '([[id]], [[name]]) IN ((:qp0, :qp1), (:qp2, :qp3))', [':qp0' => 1, ':qp1' => 'foo', ':qp2' => 2, ':qp3' => 'bar']],
                     [['not in', ['id', 'name'], [['id' => 1, 'name' => 'foo'], ['id' => 2, 'name' => 'bar']]], '([[id]], [[name]]) NOT IN ((:qp0, :qp1), (:qp2, :qp3))', [':qp0' => 1, ':qp1' => 'foo', ':qp2' => 2, ':qp3' => 'bar']],
+                    [['not in', [new Expression('id'), 'name'], [['id' => 1, 'name' => 'foo'], ['id' => 2, 'name' => 'bar']]], '([[id]], [[name]]) NOT IN ((:qp0, :qp1), (:qp2, :qp3))', [':qp0' => 1, ':qp1' => 'foo', ':qp2' => 2, ':qp3' => 'bar']],
                     [['in', ['id', 'name'], (new Query())->select(['id', 'name'])->from('users')->where(['active' => 1])], '([[id]], [[name]]) IN (SELECT [[id]], [[name]] FROM [[users]] WHERE [[active]]=:qp0)', [':qp0' => 1]],
                     [['not in', ['id', 'name'], (new Query())->select(['id', 'name'])->from('users')->where(['active' => 1])], '([[id]], [[name]]) NOT IN (SELECT [[id]], [[name]] FROM [[users]] WHERE [[active]]=:qp0)', [':qp0' => 1]],
                 ]);

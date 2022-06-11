@@ -324,7 +324,7 @@ class FileValidatorTest extends TestCase
             $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
             $randomString = '';
             for ($i = 0; $i < $len; $i++) {
-                $randomString .= $characters[rand(0, strlen($characters) - 1)];
+                $randomString .= $characters[random_int(0, strlen($characters) - 1)];
             }
 
             return $randomString;
@@ -340,7 +340,7 @@ class FileValidatorTest extends TestCase
             if (is_readable($tempName)) {
                 $size = filesize($tempName);
             } else {
-                $size = isset($param['size']) ? $param['size'] : rand(
+                $size = isset($param['size']) ? $param['size'] : random_int(
                     1,
                     $this->sizeToBytes(ini_get('upload_max_filesize'))
                 );
@@ -535,7 +535,7 @@ class FileValidatorTest extends TestCase
 
     public function validMimeTypes()
     {
-        return array_filter([
+        $validMimeTypes = array_filter([
             ['test.svg', 'image/*', 'svg'],
             ['test.jpg', 'image/*', 'jpg'],
             ['test.png', 'image/*', 'png'],
@@ -545,6 +545,14 @@ class FileValidatorTest extends TestCase
             ['test.odt', 'application/vnd*', 'odt'],
             ['test.tar.xz', 'application/x-xz', 'tar.xz'],
         ]);
+
+        if (PHP_VERSION_ID >= 80100) {
+            $v81_zx = ['test.tar.xz', 'application/octet-stream', 'tar.xz'];
+            array_pop($validMimeTypes);
+            $validMimeTypes[] = $v81_zx;
+        }
+
+        return $validMimeTypes;
     }
 
     public function invalidMimeTypes()

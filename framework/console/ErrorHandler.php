@@ -25,7 +25,7 @@ class ErrorHandler extends \yii\base\ErrorHandler
 {
     /**
      * Renders an exception using ansi format for console output.
-     * @param \Exception $exception the exception to be rendered.
+     * @param \Throwable $exception the exception to be rendered.
      */
     protected function renderException($exception)
     {
@@ -39,7 +39,7 @@ class ErrorHandler extends \yii\base\ErrorHandler
             } elseif (count($alternatives) > 1) {
                 $message .= "\n\nDid you mean one of these?\n    - " . implode("\n    - ", $alternatives);
             }
-        } elseif ($exception instanceof Exception && ($exception instanceof UserException || !YII_DEBUG)) {
+        } elseif ($exception instanceof UserException && ($exception instanceof Exception || !YII_DEBUG)) {
             $message = $this->formatMessage($exception->getName() . ': ') . $exception->getMessage();
         } elseif (YII_DEBUG) {
             if ($exception instanceof Exception) {

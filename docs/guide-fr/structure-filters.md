@@ -96,7 +96,7 @@ public function behaviors()
 {
     return [
         'access' => [
-            'class' => AccessControl::className(),
+            'class' => AccessControl::class,
             'only' => ['create', 'update'],
             'rules' => [
                 // autoriser les utilisateurs authentifiés
@@ -117,7 +117,7 @@ Pour plus de détails sur le contrôle d'accès en général, reportez-vous à l
 ### Filtres de méthodes d'authentification <span id="auth-method-filters"></span>
 
 Les filtres de méthodes d'authentification sont utilisés pour authentifier un utilisateur qui utilise des méthodes d'authentification variées comme
-[HTTP Basic Auth](http://en.wikipedia.org/wiki/Basic_access_authentication) ou [OAuth 2](http://oauth.net/2/). Les classes de filtre sont dans l'espace de noms `yii\filters\auth`.
+[HTTP Basic Auth](https://en.wikipedia.org/wiki/Basic_access_authentication) ou [OAuth 2](https://oauth.net/2/). Les classes de filtre sont dans l'espace de noms `yii\filters\auth`.
 
 L'exemple qui suit montre comment vous pouvez utiliser [[yii\filters\auth\HttpBasicAuth]] pour authentifier un utilisateur qui utilise un jeton d'accès basé sur la méthode  *HTTP Basic Auth*. Notez qu'afin que cela fonctionne, votre [[yii\web\User::identityClass|classe *identity* de l'utilisateur]] doit implémenter l'interface [[yii\web\IdentityInterface::findIdentityByAccessToken()|findIdentityByAccessToken()]].
 
@@ -128,7 +128,7 @@ public function behaviors()
 {
     return [
         'basicAuth' => [
-            'class' => HttpBasicAuth::className(),
+            'class' => HttpBasicAuth::class,
         ],
     ];
 }
@@ -151,7 +151,7 @@ public function behaviors()
 {
     return [
         [
-            'class' => ContentNegotiator::className(),
+            'class' => ContentNegotiator::class,
             'formats' => [
                 'application/json' => Response::FORMAT_JSON,
                 'application/xml' => Response::FORMAT_XML,
@@ -174,7 +174,7 @@ use yii\web\Response;
 [
     'bootstrap' => [
         [
-            'class' => ContentNegotiator::className(),
+            'class' => ContentNegotiator::class,
             'formats' => [
                 'application/json' => Response::FORMAT_JSON,
                 'application/xml' => Response::FORMAT_XML,
@@ -204,7 +204,7 @@ public function behaviors()
 {
     return [
         [
-            'class' => HttpCache::className(),
+            'class' => HttpCache::class,
             'only' => ['index'],
             'lastModified' => function ($action, $params) {
                 $q = new \yii\db\Query();
@@ -230,11 +230,11 @@ public function behaviors()
 {
     return [
         'pageCache' => [
-            'class' => PageCache::className(),
+            'class' => PageCache::class,
             'only' => ['index'],
             'duration' => 60,
             'dependency' => [
-                'class' => DbDependency::className(),
+                'class' => DbDependency::class,
                 'sql' => 'SELECT COUNT(*) FROM post',
             ],
             'variations' => [
@@ -250,7 +250,7 @@ Reportez-vous à la section [Page Caching](caching-page.md) pour plus de détail
 
 ### [[yii\filters\RateLimiter|RateLimiter]] <span id="rate-limiter"></span>
 
-*RateLimiter* met en œuvre un algorithme de limitation de débit basé sur  l'[algorithme leaky bucket](http://en.wikipedia.org/wiki/Leaky_bucket). On l'utilise en premier lieu dans la mise en œuvre des API pleinement REST. Reportez-vous à la section [limitation de débit](rest-rate-limiting.md) pour plus de détails sur l'utilisation de ce filtre.
+*RateLimiter* met en œuvre un algorithme de limitation de débit basé sur  l'[algorithme leaky bucket](https://en.wikipedia.org/wiki/Leaky_bucket). On l'utilise en premier lieu dans la mise en œuvre des API pleinement REST. Reportez-vous à la section [limitation de débit](rest-rate-limiting.md) pour plus de détails sur l'utilisation de ce filtre.
 
 
 ### [[yii\filters\VerbFilter|VerbFilter]] <span id="verb-filter"></span>
@@ -264,7 +264,7 @@ public function behaviors()
 {
     return [
         'verbs' => [
-            'class' => VerbFilter::className(),
+            'class' => VerbFilter::class,
             'actions' => [
                 'index'  => ['get'],
                 'view'   => ['get'],
@@ -291,7 +291,7 @@ public function behaviors()
 {
     return ArrayHelper::merge([
         [
-            'class' => Cors::className(),
+            'class' => Cors::class,
         ],
     ], parent::behaviors());
 }
@@ -318,7 +318,7 @@ public function behaviors()
 {
     return ArrayHelper::merge([
         [
-            'class' => Cors::className(),
+            'class' => Cors::class,
             'cors' => [
                 'Origin' => ['http://www.myserver.net'],
                 'Access-Control-Request-Method' => ['GET', 'HEAD', 'OPTIONS'],
@@ -338,7 +338,7 @@ public function behaviors()
 {
     return ArrayHelper::merge([
         [
-            'class' => Cors::className(),
+            'class' => Cors::class,
             'cors' => [
                 'Origin' => ['http://www.myserver.net'],
                 'Access-Control-Request-Method' => ['GET', 'HEAD', 'OPTIONS'],

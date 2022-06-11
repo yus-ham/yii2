@@ -1,6 +1,6 @@
 <p align="center">
     <a href="https://www.yiiframework.com/" target="_blank">
-        <img src="https://www.yiiframework.com/files/logo/yii.png" width="400" alt="Yii Framework" />
+        <img src="https://www.yiiframework.com/image/yii_logo_light.svg" width="400" alt="Yii Framework" />
     </a>
 </p>
 
@@ -19,7 +19,7 @@ Installation
 ------------
 
 - The minimum required PHP version of Yii is PHP 5.4.
-- It works best with PHP 7.
+- It works best with PHP 8.
 - [Follow the Definitive Guide](https://www.yiiframework.com/doc-2.0/guide-start-installation.html)
 in order to get step by step instructions.
 

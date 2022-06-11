@@ -22,9 +22,15 @@ use yiiunit\framework\di\stubs\Car;
 use yiiunit\framework\di\stubs\Corge;
 use yiiunit\framework\di\stubs\Foo;
 use yiiunit\framework\di\stubs\FooProperty;
+use yiiunit\framework\di\stubs\Kappa;
 use yiiunit\framework\di\stubs\Qux;
+use yiiunit\framework\di\stubs\QuxAnother;
 use yiiunit\framework\di\stubs\QuxInterface;
 use yiiunit\framework\di\stubs\QuxFactory;
+use yiiunit\framework\di\stubs\UnionTypeNotNull;
+use yiiunit\framework\di\stubs\UnionTypeNull;
+use yiiunit\framework\di\stubs\UnionTypeWithClass;
+use yiiunit\framework\di\stubs\Zeta;
 use yiiunit\TestCase;
 
 /**
@@ -213,7 +219,7 @@ class ContainerTest extends TestCase
                 ],
             ],
         ]);
-        $closure = function ($a, $x = 5, $b) {
+        $closure = function ($a, $b, $x = 5) {
             return $a > $b;
         };
         $this->assertFalse(Yii::$container->invoke($closure, ['b' => 5, 'a' => 1]));
@@ -547,6 +553,12 @@ class ContainerTest extends TestCase
         $this->assertInstanceOf(Beta::className(), $alpha->beta);
         $this->assertInstanceOf($QuxInterface, $alpha->omega);
         $this->assertNull($alpha->unknown);
+        $this->assertNull($alpha->color);
+
+        $container = new Container();
+        $container->set(__NAMESPACE__ . '\stubs\AbstractColor', __NAMESPACE__ . '\stubs\Color');
+        $alpha = $container->get(Alpha::className());
+        $this->assertInstanceOf(__NAMESPACE__ . '\stubs\Color', $alpha->color);
     }
 
     /**
@@ -573,5 +585,145 @@ class ContainerTest extends TestCase
             'color' => 'red',
             'Hello',
         ]);
+    }
+
+    public function dataNotInstantiableException()
+    {
+        return [
+            [Bar::className()],
+            [Kappa::className()],
+        ];
+    }
+
+    /**
+     * @dataProvider dataNotInstantiableException
+     *
+     * @see https://github.com/yiisoft/yii2/pull/18379
+     *
+     * @param string $class
+     */
+    public function testNotInstantiableException($class)
+    {
+        $this->expectException('yii\di\NotInstantiableException');
+        (new Container())->get($class);
+    }
+
+    public function testNullTypeConstructorParameters()
+    {
+        if (PHP_VERSION_ID < 70100) {
+            $this->markTestSkipped('Can not be tested on PHP < 7.1');
+            return;
+        }
+
+        $zeta = (new Container())->get(Zeta::className());
+        $this->assertInstanceOf(Beta::className(), $zeta->beta);
+        $this->assertInstanceOf(Beta::className(), $zeta->betaNull);
+        $this->assertNull($zeta->color);
+        $this->assertNull($zeta->colorNull);
+        $this->assertNull($zeta->qux);
+        $this->assertNull($zeta->quxNull);
+        $this->assertNull($zeta->unknown);
+        $this->assertNull($zeta->unknownNull);
+    }
+
+    public function testUnionTypeWithNullConstructorParameters()
+    {
+        if (PHP_VERSION_ID < 80000) {
+            $this->markTestSkipped('Can not be tested on PHP < 8.0');
+            return;
+        }
+
+        $unionType = (new Container())->get(UnionTypeNull::className());
+        $this->assertInstanceOf(UnionTypeNull::className(), $unionType);
+    }
+
+    public function testUnionTypeWithoutNullConstructorParameters()
+    {
+        if (PHP_VERSION_ID < 80000) {
+            $this->markTestSkipped('Can not be tested on PHP < 8.0');
+            return;
+        }
+
+        $unionType = (new Container())->get(UnionTypeNotNull::className(), ['value' => 'a']);
+        $this->assertInstanceOf(UnionTypeNotNull::className(), $unionType);
+
+        $unionType = (new Container())->get(UnionTypeNotNull::className(), ['value' => 1]);
+        $this->assertInstanceOf(UnionTypeNotNull::className(), $unionType);
+
+        $unionType = (new Container())->get(UnionTypeNotNull::className(), ['value' => 2.3]);
+        $this->assertInstanceOf(UnionTypeNotNull::className(), $unionType);
+
+        $unionType = (new Container())->get(UnionTypeNotNull::className(), ['value' => true]);
+        $this->assertInstanceOf(UnionTypeNotNull::className(), $unionType);
+
+        $this->expectException('TypeError');
+        (new Container())->get(UnionTypeNotNull::className());
+    }
+
+    public function testUnionTypeWithClassConstructorParameters()
+    {
+        if (PHP_VERSION_ID < 80000) {
+            $this->markTestSkipped('Can not be tested on PHP < 8.0');
+            return;
+        }
+
+        $unionType = (new Container())->get(UnionTypeWithClass::className(), ['value' => new Beta()]);
+        $this->assertInstanceOf(UnionTypeWithClass::className(), $unionType);
+        $this->assertInstanceOf(Beta::className(), $unionType->value);
+
+        $this->expectException('TypeError');
+        (new Container())->get(UnionTypeNotNull::className());
+    }
+
+    public function testResolveCallableDependenciesUnionTypes()
+    {
+        if (PHP_VERSION_ID < 80000) {
+            $this->markTestSkipped('Can not be tested on PHP < 8.0');
+            return;
+        }
+
+        $this->mockApplication([
+            'components' => [
+                Beta::className(),
+            ],
+        ]);
+
+        Yii::$container->set('yiiunit\framework\di\stubs\QuxInterface', [
+            'class' => Qux::className(),
+        ]);
+
+        $className = 'yiiunit\framework\di\stubs\StaticMethodsWithUnionTypes';
+
+        $params = Yii::$container->resolveCallableDependencies([$className, 'withBetaUnion']);
+        $this->assertInstanceOf(Beta::classname(), $params[0]);
+
+        $params = Yii::$container->resolveCallableDependencies([$className, 'withBetaUnionInverse']);
+        $this->assertInstanceOf(Beta::classname(), $params[0]);
+
+        $params = Yii::$container->resolveCallableDependencies([$className, 'withBetaAndQuxUnion']);
+        $this->assertInstanceOf(Beta::classname(), $params[0]);
+
+        $params = Yii::$container->resolveCallableDependencies([$className, 'withQuxAndBetaUnion']);
+        $this->assertInstanceOf(Qux::classname(), $params[0]);
+    }
+
+    public function testResolveCallableDependenciesIntersectionTypes()
+    {
+        if (PHP_VERSION_ID < 80100) {
+            $this->markTestSkipped('Can not be tested on PHP < 8.1');
+            return;
+        }
+
+        Yii::$container->set('yiiunit\framework\di\stubs\QuxInterface', [
+            'class' => Qux::className(),
+        ]);
+
+        $className = 'yiiunit\framework\di\stubs\StaticMethodsWithIntersectionTypes';
+
+        $params = Yii::$container->resolveCallableDependencies([$className, 'withQuxInterfaceAndQuxAnotherIntersection']);
+        $this->assertInstanceOf(Qux::classname(), $params[0]);
+
+        $params = Yii::$container->resolveCallableDependencies([$className, 'withQuxAnotherAndQuxInterfaceIntersection']);
+        $this->assertInstanceOf(QuxAnother::classname(), $params[0]);
     }
 }

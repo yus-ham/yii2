@@ -51,9 +51,10 @@ Changed current directory to <directory>
 ### Настройка веб-сервера Apache
 
 Если вы используете Apache и настроили его как описано в разделе «[Установка Yii](start-installation.md)», то для тестов вам необходимо создать отдельный виртуальный хост который будет работать с той же папкой, но использовать входной скрипт `index-test.php`:
+
 ```
 <VirtualHost *:80>
-    DocumentRoot "path/to/basic/webb"
+    DocumentRoot "path/to/basic/web"
     ServerName mysite-test
     <Directory "path/to/basic/web">
         Order Allow,Deny
@@ -67,5 +68,6 @@ Changed current directory to <directory>
     </Directory>
 </VirtualHost>
 ```
+
 Так мы укажем веб серверу перенаправлять все запросы на скрипт `index-test.php`.
 > Note: Обратите внимание, что здесь мы указываем параметр `DirectoryIndex`, помимо тех параметров, которые были указаны для первого хоста. Это сделано с той целью, чтобы при обращении к главной странице по адресу `mysite-test` также использовался бы скрипт `index-test.php`.
