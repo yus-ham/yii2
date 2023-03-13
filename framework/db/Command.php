@@ -1,8 +1,8 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 namespace yii\db;
@@ -269,10 +269,10 @@ class Command extends Component
         } catch (\Exception $e) {
             $message = $e->getMessage() . "\nFailed to prepare SQL: $sql";
             $errorInfo = $e instanceof \PDOException ? $e->errorInfo : null;
-            throw new Exception($message, $errorInfo, (int) $e->getCode(), $e);
+            throw new Exception($message, $errorInfo, $e->getCode(), $e);
         } catch (\Throwable $e) {
             $message = $e->getMessage() . "\nFailed to prepare SQL: $sql";
-            throw new Exception($message, null, (int) $e->getCode(), $e);
+            throw new Exception($message, null, $e->getCode(), $e);
         }
     }
 
@@ -533,7 +533,7 @@ class Command extends Component
      * ```php
      * $sql = $queryBuilder->upsert('pages', [
      *     'name' => 'Front page',
-     *     'url' => 'http://example.com/', // url is unique
+     *     'url' => 'https://example.com/', // url is unique
      *     'visits' => 0,
      * ], [
      *     'visits' => new \yii\db\Expression('visits + 1'),
@@ -1153,7 +1153,7 @@ class Command extends Component
                 $cache = $info[0];
                 $cacheKey = $this->getCacheKey($method, $fetchMode, '');
                 $result = $cache->get($cacheKey);
-                if (is_array($result) && isset($result[0])) {
+                if (is_array($result) && array_key_exists(0, $result)) {
                     Yii::debug('Query result served from cache', 'yii\db\Command::query');
                     return $result[0];
                 }
@@ -1324,6 +1324,5 @@ class Command extends Component
         $this->params = [];
         $this->_refreshTableName = null;
         $this->_isolationLevel = false;
-        $this->_retryHandler = null;
     }
 }

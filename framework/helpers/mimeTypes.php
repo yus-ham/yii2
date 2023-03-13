@@ -5,7 +5,7 @@
  * This file contains most commonly used MIME types
  * according to file extension names.
  * Its content is generated from the apache http mime.types file.
- * http://svn.apache.org/viewvc/httpd/httpd/trunk/docs/conf/mime.types?view=markup
+ * https://svn.apache.org/viewvc/httpd/httpd/trunk/docs/conf/mime.types?view=markup
  * This file has been placed in the public domain for unlimited redistribution.
  */
 $mimeTypes = [
@@ -318,11 +318,12 @@ $mimeTypes = [
     'htke' => 'application/vnd.kenameaapp',
     'htm' => 'text/html',
     'html' => 'text/html',
-    'hvd' => 'application/vnd.yamaha.hv-dic',
     'hvp' => 'application/vnd.yamaha.hv-voice',
     'hvs' => 'application/vnd.yamaha.hv-script',
     'i2g' => 'application/vnd.intergeo',
     'icc' => 'application/vnd.iccprofile',
+    0 => 'application/vnd.lotus-1-2-3',
+    'hvd' => 'application/vnd.yamaha.hv-dic',
     'ice' => 'x-conference/x-cooltalk',
     'icm' => 'application/vnd.iccprofile',
     'ico' => 'image/x-icon',
@@ -355,7 +356,6 @@ $mimeTypes = [
     'jam' => 'application/vnd.jam',
     'jar' => 'application/java-archive',
     'java' => 'text/x-java-source',
-    'jfif' => 'image/jpeg',
     'jisp' => 'application/vnd.jisp',
     'jlt' => 'application/vnd.hp-jlyt',
     'jnlp' => 'application/x-java-jnlp-file',
@@ -366,7 +366,7 @@ $mimeTypes = [
     'jpgm' => 'video/jpm',
     'jpgv' => 'video/jpeg',
     'jpm' => 'video/jpm',
-    'js' => 'application/javascript',
+    'js' => 'text/javascript',
     'json' => 'application/json',
     'jsonml' => 'application/jsonml+json',
     'kar' => 'audio/midi',
@@ -401,7 +401,6 @@ $mimeTypes = [
     'log' => 'text/plain',
     'lostxml' => 'application/lost+xml',
     'lrf' => 'application/octet-stream',
-    0 => 'application/vnd.lotus-1-2-3',
     'lrm' => 'application/vnd.ms-lrm',
     'ltf' => 'application/vnd.frogans.ltf',
     'lvp' => 'audio/vnd.lucent.voice',

@@ -1,8 +1,8 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 use yii\helpers\FileHelper;
@@ -653,6 +653,15 @@ class FileHelperTest extends TestCase
             );
         }));
         $this->assertEquals($expect, $foundFiles);
+
+        // negative pattern
+        $foundFiles = FileHelper::findFiles($basePath, ['except' => ['/one/*', '!/one/two']]);
+        sort($foundFiles);
+        $expect = array_values(array_filter($flat, function ($p) {
+            return strpos($p, DIRECTORY_SEPARATOR . 'one') === false || strpos($p, DIRECTORY_SEPARATOR . 'two') !== false;
+        }));
+
+        $this->assertEquals($expect, $foundFiles);
     }
 
     /**
@@ -708,7 +717,7 @@ class FileHelperTest extends TestCase
         file_put_contents($file, 'some text');
         $this->assertEquals('text/plain', FileHelper::getMimeType($file));
 
-        // see http://stackoverflow.com/questions/477816/what-is-the-correct-json-content-type
+        // see https://stackoverflow.com/questions/477816/what-is-the-correct-json-content-type
         // JSON/JSONP should not use text/plain - see http://jibbering.com/blog/?p=514
         // with "fileinfo" extension enabled, returned MIME is not quite correctly "text/plain"
         // without "fileinfo" it falls back to getMimeTypeByExtension() and returns application/json
